@@ -1,47 +1,60 @@
-import { getSession, signOut, useSession } from 'next-auth/react';
+import { getSession, useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import Layout2 from '@/components/Layout2';
 import { useEffect, useState } from 'react';
+import axios from 'axios';
+import Link from 'next/link';
 
 export default function DashboardPage() {
   const { data: session } = useSession();
   const router = useRouter();
-  const [totalInterns, setTotalInterns] = useState(0);
-  const [totalCourses, setTotalCourses] = useState(0);
-  const [totalUniversities, setTotalUniversities] = useState(0);
+  const [totalInterns, setTotalInterns] = useState([]);
+  const [totalCourses, setTotalCourses] = useState([]);
+  const [totalUniversities, setTotalUniversities] = useState([]);
   const [internsByDepartment, setInternsByDepartment] = useState([]);
+  const [loading, setLoading] = useState(true); // Add a loading state
 
   useEffect(() => {
-    fetch('/api/admin/report1')
-      .then((response) => response.json())
-      .then((data) => setTotalInterns(data.totalInterns))
-      .catch((error) => console.error('Error fetching total interns:', error));
+    const fetchData = async () => {
+      try {
+        const response1 = await axios.get('/api/admin/report1');
+        setTotalInterns(response1.data.totalInterns);
 
-    fetch('/api/admin/report3')
-      .then((response) => response.json())
-      .then((data) => setTotalCourses(data.totalCourses))
-      .catch((error) => console.error('Error fetching total courses:', error));
+        const response3 = await axios.get('/api/admin/report3');
+        setTotalCourses(response3.data.totalCourses);
 
-    fetch('/api/admin/report2')
-      .then((response) => response.json())
-      .then((data) => setTotalUniversities(data.totalUniversities))
-      .catch((error) =>
-        console.error('Error fetching total universities:', error)
-      );
+        const response2 = await axios.get('/api/admin/report2');
+        setTotalUniversities(response2.data.totalUniversities);
 
-    fetch('/api/admin/report4')
-      .then((response) => response.json())
-      .then((data) => {
-        if (Array.isArray(data)) {
-          setInternsByDepartment(data);
+        const response4 = await axios.get('/api/admin/report4');
+        if (Array.isArray(response4.data)) {
+          setInternsByDepartment(response4.data);
         } else {
-          console.error('Data fetched is not an array:', data);
+          console.error('Data fetched is not an array:', response4.data);
         }
-      })
-      .catch((error) =>
-        console.error('Error fetching interns by department:', error)
-      );
+
+        setLoading(false); // Data has been loaded, set loading to false
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        setLoading(false); // Handle errors and set loading to false
+      }
+    };
+
+    fetchData();
   }, []);
+
+  // Conditional rendering while data is loading
+  if (loading) {
+    return (
+      <Layout2 title="Admin Page">
+        <div className="bg-sky-500 flex min-h-screen">
+          <div className="bg-gray-200 flex-grow rounded-lg mt-2 mr-3">
+            <p>Loading...</p>
+          </div>
+        </div>
+      </Layout2>
+    );
+  }
 
   return (
     <Layout2 title="Admin Page">
@@ -54,32 +67,40 @@ export default function DashboardPage() {
             <h3>Total Universities: {totalUniversities}</h3>
           </div>
           <div>
-            <h3>Interns by Department:</h3>
-            <ul>
-              {internsByDepartment.map((department) => (
-                <li key={department._id}>
-                  {department._id}: {department.count}
-                </li>
-              ))}
-            </ul>
+            <h3 className="text-center font-bold text-2xl">
+              Interns by Department:
+            </h3>
+            <table className="w-full border-collapse mt-4">
+              <thead>
+                <tr className="bg-gray-200">
+                  <th className="py-2 px-4 font-semibold text-left">
+                    Department Name
+                  </th>
+                  <th className="py-2 px-4 font-semibold text-left">Count</th>
+                  <th className="py-2 px-4 font-semibold text-left">
+                    <button className="bg-slate rounded-md">Action</button>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {internsByDepartment.map((department) => (
+                  <tr key={department._id} className="border-t border-gray-300">
+                    <td className="py-2 px-4">{department.departmentName}</td>
+                    <td className="py-2 px-4">{department.count}</td>
+                    <Link href="/admin/all">
+                      <td className="py-2 px-4 font-semibold text-left">
+                        <button className="bg-sky-400 text-white px-2 py-1 rounded mb-4 text-centre">
+                          View
+                        </button>
+                      </td>
+                    </Link>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
     </Layout2>
   );
-}
-
-export async function getServerSideProps({ req }) {
-  const session = await getSession({ req });
-  if (!session) {
-    return {
-      redirect: {
-        destination: '/login',
-        permanent: false,
-      },
-    };
-  }
-  return {
-    props: { session },
-  };
 }

@@ -3,7 +3,7 @@ import axios from 'axios';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { motion } from 'framer-motion';
-
+import Link from 'next/link';
 import Layout2 from '@/components/Layout2';
 
 const DataList = () => {
@@ -98,6 +98,13 @@ const DataList = () => {
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.3 }}
             >
+              <Link
+                href="/admin/add"
+                className="bg-green-500 text-white px-2 py-1 rounded mb-4 inline-block"
+              >
+                Add
+              </Link>
+
               <input
                 type="text"
                 placeholder="Search courses,departments,universities..."

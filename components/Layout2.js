@@ -12,7 +12,7 @@ const CustomerLayout = ({ title, children }) => {
     setIsClicked(!isClicked);
   };
   const logoutClickHandler = () => {
-    signOut({ callbackUrl: '/login' });
+    signOut({ callbackUrl: '/' });
   };
 
   return (

@@ -35,7 +35,7 @@ export default function FormPage() {
     // Check if the user is authenticated
     if (!session) {
       // Redirect to the login page if the user is not authenticated
-      router.replace('/login');
+      router.replace('/');
     }
   }, [session, status]);
   useEffect(() => {

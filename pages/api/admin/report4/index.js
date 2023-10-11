@@ -1,5 +1,6 @@
 import mongooConnect from '../../../../utils/db';
 import Intern from '../../../../models/Intern';
+import Department from '../../../../models/Department'; // Import the Department model
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {
@@ -11,6 +12,24 @@ export default async function handler(req, res) {
           $group: {
             _id: '$department',
             count: { $sum: 1 },
+          },
+        },
+        {
+          $lookup: {
+            from: Department.collection.name, // Use the actual name of your Department collection
+            localField: '_id',
+            foreignField: '_id',
+            as: 'departmentInfo',
+          },
+        },
+        {
+          $unwind: '$departmentInfo',
+        },
+        {
+          $project: {
+            _id: 1,
+            count: 1,
+            departmentName: '$departmentInfo.name', // Assuming department name field is 'name'
           },
         },
       ]);

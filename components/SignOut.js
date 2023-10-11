@@ -6,7 +6,7 @@ const SignOutButton = () => {
 
   const handleSignOut = async () => {
     try {
-      await signOut({ callbackUrl: '/login' });
+      await signOut({ callbackUrl: '/' });
     } catch (error) {
       // Handle sign out error
       console.error('Sign out error:', error);

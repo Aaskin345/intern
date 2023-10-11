@@ -13,7 +13,7 @@ const FarmerLayout = ({ title, children }) => {
   };
 
   const logoutClickHandler = () => {
-    signOut({ callbackUrl: '/login' });
+    signOut({ callbackUrl: '/' });
   };
   return (
     <>

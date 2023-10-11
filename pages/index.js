@@ -1,52 +1,87 @@
-import { useRouter } from 'next/router';
-import { Canvas, useFrame } from 'react-three-fiber';
-import * as THREE from 'three';
-import { useRef } from 'react';
+import { useState } from 'react';
+import { signIn, getSession } from 'next-auth/react';
+import { useForm } from 'react-hook-form';
 
-function Box() {
-  const meshRef = useRef();
+export default function LoginScreen() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const { handleSubmit, register } = useForm();
 
-  useFrame(() => {
-    meshRef.current.rotation.x += 0.01;
-    meshRef.current.rotation.y += 0.01;
-  });
+  const submitHandler = async () => {
+    try {
+      const response = await signIn('credentials', {
+        redirect: false,
+        email,
+        password,
+      });
 
-  return (
-    <mesh ref={meshRef}>
-      <boxBufferGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial color={0xff0000} />
-    </mesh>
-  );
-}
+      if (response.ok) {
+        const session = await getSession();
 
-export default function Home() {
-  const router = useRouter();
-
-  const handleLogin = () => {
-    router.push('/login');
+        if (session && session.user.isAdmin) {
+          window.location.href = '/admin/dashboard';
+        } else {
+          window.location.href = '/dashboard';
+        }
+      }
+    } catch (err) {
+      // Handle errors if needed
+    }
   };
 
   return (
-    <div className="w-screen h-screen relative">
-      <Canvas style={{ background: 'black' }}>
-        <ambientLight />
-        <pointLight position={[10, 10, 10]} />
-        <Box />
-      </Canvas>
-      <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-white text-4xl font-bold mb-6">Welcome</h1>
-          <p className="text-white text-lg mb-8">Login to proceed</p>
-          <div className="flex justify-center">
-            <button
-              className="bg-white text-sky-500 hover:bg-sky-600 text-lg font-medium py-3 px-6 rounded-md mr-4"
-              onClick={handleLogin}
-            >
-              Login
-            </button>
-          </div>
+    <div className="bg-gradient-to-r from-blue-400 to-purple-500 min-h-screen flex flex-col items-center justify-center">
+      <h2 className="text-2xl font-semibold text-white mb-4">Login</h2>
+      <form
+        className="bg-white p-8 rounded-md shadow-md w-96"
+        onSubmit={handleSubmit(submitHandler)}
+      >
+        <div className="mb-4 flex items-center">
+          <label htmlFor="email" className="text-gray-700 font-semibold">
+            Email:
+          </label>
+          <input
+            type="email"
+            id="email"
+            {...register('email', {
+              required: 'Please enter email',
+              pattern: {
+                value: /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+.[a-zA-Z0-9-.]+$/i,
+              },
+            })}
+            className="w-full border border-gray-300 rounded-md px-3 py-2 mt-1 focus:outline-none focus:ring focus:border-blue-500"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </div>
-      </div>
+
+        <div className="mb-4 flex items-center">
+          <label htmlFor="password" className="text-gray-700 font-semibold">
+            Password:
+          </label>
+          <input
+            type="password"
+            id="password"
+            {...register('password', {
+              required: 'Please enter password',
+              minLength: {
+                value: 6,
+                message: 'Password must be at least 6 characters long',
+              },
+            })}
+            className="w-full border border-gray-300 rounded-md px-3 py-2 mt-1 focus:outline-none focus:ring focus:border-blue-500"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </div>
+
+        <button
+          type="submit"
+          className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md transition duration-300 ease-in-out transform hover:scale-105"
+        >
+          Login
+        </button>
+      </form>
     </div>
   );
 }
